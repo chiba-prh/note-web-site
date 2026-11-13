@@ -1,0 +1,74 @@
+{
+  "groups": [
+    {
+      "id": "mujdncsahjzya",
+      "name": "アニメーションがすごい"
+    }
+  ],
+  "items": [
+    {
+      "id": "mujdneagofni1",
+      "url": "https://school.dhw.co.jp/p/cgvfx-lp/1708dhw/",
+      "title": "デジタルハリウッド3D制作",
+      "memo": "",
+      "group": "mujdncsahjzya",
+      "created": 1790486864152
+    },
+    {
+      "id": "muutzr2dqbgom",
+      "url": "https://aio.qujira.biz/whitepaper/",
+      "title": "AIO対策代行 サービス資料",
+      "memo": "簡潔でシンプルなデザイン",
+      "group": "",
+      "created": 1791179442373
+    },
+    {
+      "id": "muyxky978hckw",
+      "url": "https://furoshiki-base.com/",
+      "title": "フロシキ",
+      "memo": "AIっぽいけど、要所を抑えている気がする",
+      "group": "",
+      "created": 1791427335019
+    },
+    {
+      "id": "mv8u6i3apmgwg",
+      "url": "https://free.sygnal-ai.com/",
+      "title": "Sygnal",
+      "memo": "シンプルなアニメーションがいい",
+      "group": "",
+      "created": 1792026283798
+    },
+    {
+      "id": "mvc3fihwo60if",
+      "url": "https://zikuu.co.jp/",
+      "title": "Zikuu",
+      "memo": "",
+      "group": "",
+      "created": 1792223219300
+    },
+    {
+      "id": "mvsuooalzopmr",
+      "url": "https://start.apodrive.jp/",
+      "title": "アポドライブ",
+      "memo": "簡潔でいい",
+      "group": "",
+      "created": 1793236455165
+    },
+    {
+      "id": "mvsxl3b6u4d6w",
+      "url": "https://hp.mechanisms.co.jp/wordpress?ref=php",
+      "title": "メカニズムHP",
+      "memo": "みやすい",
+      "group": "",
+      "created": 1793241326850
+    },
+    {
+      "id": "mwemqwadhm3sr",
+      "url": "https://neologic.co.jp/apps#trade=construction",
+      "title": "NeoLogic株式会社",
+      "memo": "",
+      "group": "",
+      "created": 1794553377781
+    }
+  ]
+}
