@@ -1,0 +1,7 @@
+# 元データ（追跡パラメータやメモがそのまま入っている）は公開しない
+bookmarks-raw.json
+fun-sites-backup-*.json
+
+# 公開用スクリプトの作業ファイル
+tools/publish-cache.json
+tools/publish.log

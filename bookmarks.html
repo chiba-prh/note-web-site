@@ -97,6 +97,7 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
       <button class="btn" id="exportBtn">⬇ バックアップを保存（JSON）</button>
       <button class="btn" id="importBtn">⬆ バックアップから読み込み</button>
       <input type="file" id="importFile" accept=".json,application/json" hidden>
+      <button class="btn" id="fileBtn" hidden>💾 ファイルへ自動保存：未設定</button>
     </div>
   </aside>
 
@@ -157,6 +158,69 @@ function load(){
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify(state)); }
   catch(e){ toast('保存に失敗しました（ブラウザの保存領域を確認してください）'); }
+  writeFile();
+}
+
+/* ---------- ファイルへ自動保存（GitHub公開用スクリプトが読む元データ） ---------- */
+const FILE_NAME = 'bookmarks-raw.json';
+let fileHandle = null, fileQueue = Promise.resolve();
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const r = indexedDB.open('fun-sites-file',1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+async function idbGet(k){
+  const db = await idbOpen();
+  return new Promise((res,rej)=>{ const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); });
+}
+async function idbSet(k,v){
+  const db = await idbOpen();
+  return new Promise((res,rej)=>{ const t = db.transaction('kv','readwrite'); t.objectStore('kv').put(v,k); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); });
+}
+function fileStatus(s){
+  const b = $('fileBtn');
+  b.textContent = s==='ok' ? `💾 ファイルへ自動保存：ON` : s==='ask' ? '⚠ ファイル保存：クリックで再開' : '💾 ファイルへ自動保存：未設定';
+  b.title = s==='ok' ? `保存先：${fileHandle.name}（クリックで今すぐ保存）` : s==='ask' ? 'ブラウザの許可が切れています。クリックして許可してください' : `このフォルダの ${FILE_NAME} を保存先に選んでください`;
+}
+// ask=true のときだけ許可ダイアログを出す（ユーザー操作の直後でないと出せない）
+async function fileReady(ask){
+  if(!fileHandle) return false;
+  const opt = {mode:'readwrite'};
+  if(await fileHandle.queryPermission(opt)==='granted') return true;
+  if(ask){ try{ if(await fileHandle.requestPermission(opt)==='granted') return true; }catch(e){} }
+  return false;
+}
+function writeFile(){
+  if(!fileHandle) return fileQueue;
+  const text = JSON.stringify(state,null,2);
+  fileQueue = fileQueue.then(async () => {
+    try{
+      if(!await fileReady(true)){ fileStatus('ask'); return false; }
+      const w = await fileHandle.createWritable();
+      await w.write(text); await w.close();
+      fileStatus('ok'); return true;
+    }catch(e){ fileStatus('ask'); return false; }
+  });
+  return fileQueue;
+}
+$('fileBtn').onclick = async () => {
+  try{
+    if(!fileHandle){
+      fileHandle = await showSaveFilePicker({ suggestedName:FILE_NAME, types:[{description:'JSON', accept:{'application/json':['.json']}}] });
+      await idbSet('handle', fileHandle);
+    }
+    toast(await writeFile() ? `${fileHandle.name} に保存しました` : 'ファイルに保存できませんでした');
+  }catch(e){ /* ダイアログをキャンセル */ }
+};
+if(window.showSaveFilePicker){
+  $('fileBtn').hidden = false;
+  idbGet('handle').then(async h => {
+    if(!h) return;
+    fileHandle = h;
+    fileStatus(await fileReady(false) ? 'ok' : 'ask');
+  }).catch(()=>{});
 }
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1800); }
