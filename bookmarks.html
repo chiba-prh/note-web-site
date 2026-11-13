@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Webサイト保存</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f6fde'/%3E%3Cpath d='M10 7h12a1 1 0 0 1 1 1v17.2a.5.5 0 0 1-.8.4L16 21l-6.2 4.6a.5.5 0 0 1-.8-.4V8a1 1 0 0 1 1-1z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f6f5f2; --panel:#ffffff; --text:#1f1f1f; --muted:#6b6b6b; --line:#e3e1dc;
+  --accent:#2f6fde; --accent-soft:#e8effc; --danger:#d0453b; --shadow:0 1px 3px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#16171a; --panel:#1f2024; --text:#e9e9ea; --muted:#9a9ba0; --line:#2e3036;
+    --accent:#6b9cff; --accent-soft:#243150; --danger:#ff6b61; --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"Segoe UI","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+aside{border-right:1px solid var(--line);padding:20px 14px;background:var(--panel)}
+aside h1{font-size:17px;margin:0 0 16px 6px}
+.groups{list-style:none;margin:0;padding:0}
+.groups li{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;cursor:pointer;user-select:none}
+.groups li:hover{background:var(--bg)}
+.groups li.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.groups li.drop{outline:2px dashed var(--accent)}
+.groups .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.groups .count{font-size:12px;color:var(--muted)}
+.groups .gbtn{display:none;border:0;background:none;cursor:pointer;color:var(--muted);padding:0 2px}
+.groups li:hover .gbtn{display:inline}
+.sep{height:1px;background:var(--line);margin:10px 4px}
+.addgroup{display:flex;gap:6px;margin-top:10px}
+.addgroup input{flex:1;min-width:0}
+.tools{margin-top:24px;display:flex;flex-direction:column;gap:6px}
+.tools button{text-align:left}
+main{padding:20px 24px;max-width:1100px;width:100%}
+.addbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow);
+  display:grid;grid-template-columns:2fr 1.3fr 1fr auto;gap:8px}
+.addbox textarea{grid-column:1 / -1;resize:vertical;min-height:38px}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:7px 12px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.bar{display:flex;gap:8px;align-items:center;margin:18px 0 10px}
+.bar h2{font-size:16px;margin:0;flex:1}
+.bar input{width:240px}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:4px;cursor:pointer}
+.card:hover{border-color:var(--accent)}
+.card a{cursor:pointer}
+.card.dragging{opacity:.4}
+.card .top{display:flex;gap:8px;align-items:center}
+.card img{width:18px;height:18px;flex:none;border-radius:4px}
+.card a.title{color:var(--text);font-weight:600;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.card a.title:hover{color:var(--accent);text-decoration:underline}
+.card .url{font-size:12px;color:var(--muted);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .memo{white-space:pre-wrap;font-size:13px}
+.card .foot{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);margin-top:4px}
+.card .foot .tag{background:var(--bg);border-radius:20px;padding:1px 8px}
+.card .foot .sp{flex:1}
+.card .foot button{border:0;background:none;cursor:pointer;color:var(--muted);padding:2px 4px}
+.card .foot button:hover{color:var(--accent)}
+.card .foot button.del:hover{color:var(--danger)}
+.empty{color:var(--muted);padding:40px;text-align:center;border:1px dashed var(--line);border-radius:12px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);width:min(520px,92vw)}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog form{display:flex;flex-direction:column;gap:8px}
+dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);
+  padding:8px 16px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  aside{border-right:0;border-bottom:1px solid var(--line)}
+  main{padding:16px}
+  .addbox{grid-template-columns:1fr}
+  .bar input{width:140px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>🌐 Webサイト保存</h1>
+    <ul class="groups" id="groups"></ul>
+    <div class="addgroup">
+      <input id="newGroup" placeholder="新しいグループ名">
+      <button class="btn" id="addGroupBtn">＋</button>
+    </div>
+    <div class="tools">
+      <button class="btn" id="exportBtn">⬇ バックアップを保存（JSON）</button>
+      <button class="btn" id="importBtn">⬆ バックアップから読み込み</button>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+    </div>
+  </aside>
+
+  <main>
+    <div class="addbox">
+      <input id="url" placeholder="URL を貼り付け（Enter で追加）">
+      <input id="title" placeholder="タイトル（空ならドメイン名）">
+      <select id="group"></select>
+      <button class="btn primary" id="addBtn">追加</button>
+      <textarea id="memo" placeholder="メモ（どこが面白いか など・任意）"></textarea>
+    </div>
+
+    <div class="bar">
+      <h2 id="viewTitle">すべて</h2>
+      <select id="sort">
+        <option value="new">新しい順</option>
+        <option value="old">古い順</option>
+        <option value="title">タイトル順</option>
+      </select>
+      <input id="search" type="search" placeholder="🔍 検索">
+    </div>
+    <div class="list" id="list"></div>
+  </main>
+</div>
+
+<dialog id="editDlg">
+  <form method="dialog" id="editForm">
+    <strong>編集</strong>
+    <input id="eUrl" placeholder="URL" required>
+    <input id="eTitle" placeholder="タイトル">
+    <select id="eGroup"></select>
+    <textarea id="eMemo" rows="4" placeholder="メモ"></textarea>
+    <div class="row">
+      <button class="btn" value="cancel" formnovalidate>キャンセル</button>
+      <button class="btn primary" value="ok">保存</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = 'fun-sites-v1';
+const ALL = '__all__', NONE = '';
+const $ = id => document.getElementById(id);
+
+let state = load();
+let current = ALL;
+let editingId = null;
+
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if(s && Array.isArray(s.items) && Array.isArray(s.groups)) return s;
+  }catch(e){}
+  return {groups:[], items:[]};
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch(e){ toast('保存に失敗しました（ブラウザの保存領域を確認してください）'); }
+}
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1800); }
+function normUrl(u){
+  u = u.trim();
+  if(!u) return '';
+  if(!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = 'https://' + u;
+  return u;
+}
+function host(u){ try{ return new URL(u).hostname.replace(/^www\./,''); }catch(e){ return u; } }
+function groupName(id){ const g = state.groups.find(g=>g.id===id); return g ? g.name : '未分類'; }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- グループ ---------- */
+function renderGroups(){
+  const count = id => state.items.filter(i => id===ALL ? true : i.group===id).length;
+  const rows = [{id:ALL,name:'すべて',fixed:true}, ...state.groups, {id:NONE,name:'未分類',fixed:true}];
+  $('groups').innerHTML = rows.map((g,i) => `
+    ${i===rows.length-1 ? '<div class="sep"></div>' : ''}
+    <li data-id="${esc(g.id)}" class="${g.id===current?'active':''}">
+      <span class="name">${g.id===ALL?'📚':'📁'} ${esc(g.name)}</span>
+      ${g.fixed ? '' : `<button class="gbtn" data-act="up" title="上へ">↑</button><button class="gbtn" data-act="rename" title="名前変更">✎</button><button class="gbtn" data-act="del" title="削除">✕</button>`}
+      <span class="count">${count(g.id)}</span>
+    </li>`).join('');
+  const opts = state.groups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('') + `<option value="">未分類</option>`;
+  for(const sel of [$('group'), $('eGroup')]){ const v = sel.value; sel.innerHTML = opts; sel.value = v; }
+  if(current!==ALL) $('group').value = current;
+  if($('group').selectedIndex<0) $('group').value = NONE;
+}
+
+$('groups').addEventListener('click', e => {
+  const li = e.target.closest('li'); if(!li) return;
+  const id = li.dataset.id, act = e.target.dataset.act;
+  if(act==='rename'){
+    const g = state.groups.find(g=>g.id===id);
+    const n = prompt('新しいグループ名', g.name);
+    if(n && n.trim()){ g.name = n.trim(); save(); render(); }
+    return;
+  }
+  if(act==='del'){
+    const g = state.groups.find(g=>g.id===id);
+    if(!confirm(`グループ「${g.name}」を削除しますか？\n中のサイトは「未分類」に移動します。`)) return;
+    state.items.forEach(i => { if(i.group===id) i.group = NONE; });
+    state.groups = state.groups.filter(x=>x.id!==id);
+    if(current===id) current = ALL;
+    save(); render(); return;
+  }
+  if(act==='up'){
+    const k = state.groups.findIndex(g=>g.id===id);
+    if(k>0){ [state.groups[k-1], state.groups[k]] = [state.groups[k], state.groups[k-1]]; save(); render(); }
+    return;
+  }
+  current = id; render();
+});
+
+// カードをグループへドラッグして移動
+$('groups').addEventListener('dragover', e => {
+  const li = e.target.closest('li'); if(!li || li.dataset.id===ALL) return;
+  e.preventDefault(); li.classList.add('drop');
+});
+$('groups').addEventListener('dragleave', e => { const li=e.target.closest('li'); if(li) li.classList.remove('drop'); });
+$('groups').addEventListener('drop', e => {
+  const li = e.target.closest('li'); if(!li) return;
+  e.preventDefault(); li.classList.remove('drop');
+  const item = state.items.find(i=>i.id===e.dataTransfer.getData('text/x-item'));
+  if(item){ item.group = li.dataset.id; save(); render(); toast(`「${groupName(item.group)}」に移動しました`); }
+});
+
+function addGroup(){
+  const n = $('newGroup').value.trim(); if(!n) return;
+  if(state.groups.some(g=>g.name===n)){ toast('同じ名前のグループがあります'); return; }
+  const g = {id:uid(), name:n}; state.groups.push(g);
+  $('newGroup').value = ''; current = g.id; save(); render();
+}
+$('addGroupBtn').onclick = addGroup;
+$('newGroup').addEventListener('keydown', e => { if(e.key==='Enter' && !e.isComposing) addGroup(); });
+
+/* ---------- サイト ---------- */
+function addItem(){
+  const url = normUrl($('url').value);
+  if(!url){ $('url').focus(); return; }
+  if(state.items.some(i=>i.url===url) && !confirm('このURLはもう登録されています。追加しますか？')) return;
+  state.items.push({ id:uid(), url, title:$('title').value.trim(), memo:$('memo').value.trim(), group:$('group').value, created:Date.now() });
+  $('url').value = $('title').value = $('memo').value = '';
+  save(); render(); toast('追加しました'); $('url').focus();
+}
+$('addBtn').onclick = addItem;
+for(const id of ['url','title']) $(id).addEventListener('keydown', e => { if(e.key==='Enter' && !e.isComposing) addItem(); });
+
+function renderList(){
+  const q = $('search').value.trim().toLowerCase();
+  let items = state.items.filter(i => current===ALL || i.group===current);
+  if(q) items = items.filter(i => [i.title,i.url,i.memo,groupName(i.group)].join(' ').toLowerCase().includes(q));
+  const sort = $('sort').value;
+  items.sort((a,b) => sort==='old' ? a.created-b.created
+    : sort==='title' ? (a.title||host(a.url)).localeCompare(b.title||host(b.url),'ja')
+    : b.created-a.created);
+  $('viewTitle').textContent = current===ALL ? 'すべて' : groupName(current);
+  if(!items.length){
+    $('list').innerHTML = `<div class="empty">${q ? '見つかりませんでした' : 'まだありません。上の欄に URL を貼って追加しましょう'}</div>`;
+    return;
+  }
+  $('list').innerHTML = items.map(i => `
+    <div class="card" draggable="true" data-id="${esc(i.id)}">
+      <div class="top">
+        <img src="https://www.google.com/s2/favicons?sz=32&domain=${encodeURIComponent(host(i.url))}" alt="" onerror="this.style.visibility='hidden'">
+        <a class="title" href="${esc(i.url)}" target="_blank" rel="noopener" draggable="false">${esc(i.title || host(i.url))}</a>
+      </div>
+      <a class="url" href="${esc(i.url)}" target="_blank" rel="noopener" draggable="false">${esc(i.url)}</a>
+      ${i.memo ? `<div class="memo">${esc(i.memo)}</div>` : ''}
+      <div class="foot">
+        <span class="tag">📁 ${esc(groupName(i.group))}</span>
+        <span>${new Date(i.created).toLocaleDateString('ja-JP')}</span>
+        <span class="sp"></span>
+        <button data-act="copy" title="URLをコピー">⧉</button>
+        <button data-act="edit" title="編集">✎</button>
+        <button data-act="del" class="del" title="削除">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+$('list').addEventListener('click', e => {
+  const act = e.target.dataset.act;
+  if(!act){
+    // リンク以外のカード部分をクリックしても開く
+    const c = e.target.closest('.card');
+    if(c && !e.target.closest('a')) window.open(state.items.find(i=>i.id===c.dataset.id).url, '_blank', 'noopener');
+    return;
+  }
+  const item = state.items.find(i=>i.id===e.target.closest('.card').dataset.id);
+  if(act==='del'){
+    if(!confirm(`「${item.title || host(item.url)}」を削除しますか？`)) return;
+    state.items = state.items.filter(i=>i!==item); save(); render();
+  }else if(act==='copy'){
+    navigator.clipboard.writeText(item.url).then(()=>toast('URLをコピーしました'), ()=>toast('コピーできませんでした'));
+  }else if(act==='edit'){
+    editingId = item.id;
+    $('eUrl').value = item.url; $('eTitle').value = item.title; $('eMemo').value = item.memo; $('eGroup').value = item.group;
+    $('editDlg').showModal();
+  }
+});
+$('list').addEventListener('dragstart', e => {
+  const c = e.target.closest('.card'); if(!c) return;
+  e.dataTransfer.setData('text/x-item', c.dataset.id); c.classList.add('dragging');
+});
+$('list').addEventListener('dragend', e => { const c=e.target.closest('.card'); if(c) c.classList.remove('dragging'); });
+
+$('editDlg').addEventListener('close', () => {
+  if($('editDlg').returnValue!=='ok') return;
+  const item = state.items.find(i=>i.id===editingId); if(!item) return;
+  item.url = normUrl($('eUrl').value) || item.url;
+  item.title = $('eTitle').value.trim(); item.memo = $('eMemo').value.trim(); item.group = $('eGroup').value;
+  save(); render(); toast('保存しました');
+});
+
+$('search').addEventListener('input', renderList);
+$('sort').addEventListener('change', renderList);
+
+/* ---------- バックアップ ---------- */
+$('exportBtn').onclick = () => {
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `fun-sites-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+};
+$('importBtn').onclick = () => $('importFile').click();
+$('importFile').onchange = async e => {
+  const f = e.target.files[0]; if(!f) return;
+  try{
+    const s = JSON.parse(await f.text());
+    if(!Array.isArray(s.items) || !Array.isArray(s.groups)) throw 0;
+    const merge = state.items.length && confirm('今のデータに「追加（マージ）」しますか？\nキャンセルで「置き換え」になります。');
+    if(merge){
+      for(const g of s.groups) if(!state.groups.some(x=>x.id===g.id)) state.groups.push(g);
+      for(const i of s.items) if(!state.items.some(x=>x.id===i.id)) state.items.push(i);
+    }else state = s;
+    save(); current = ALL; render(); toast('読み込みました');
+  }catch(err){ toast('読み込めないファイルです'); }
+  e.target.value = '';
+};
+
+function render(){ renderGroups(); renderList(); }
+render();
+</script>
+</body>
+</html>
