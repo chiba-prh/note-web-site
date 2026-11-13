@@ -206,13 +206,24 @@ function writeFile(){
   return fileQueue;
 }
 $('fileBtn').onclick = async () => {
-  try{
-    if(!fileHandle){
+  const fail = (what, e) => {
+    const b = $('fileBtn');
+    b.textContent = `⚠ ${what}：${e && e.name || 'エラー'}`;
+    b.title = String(e && e.message || e);
+  };
+  if(!fileHandle){
+    try{
       fileHandle = await showSaveFilePicker({ suggestedName:FILE_NAME, types:[{description:'JSON', accept:{'application/json':['.json']}}] });
-      await idbSet('handle', fileHandle);
+    }catch(e){
+      if(e.name!=='AbortError') fail('保存先を選べませんでした', e);   // AbortError = ダイアログをキャンセル
+      return;
     }
-    toast(await writeFile() ? `${fileHandle.name} に保存しました` : 'ファイルに保存できませんでした');
-  }catch(e){ /* ダイアログをキャンセル */ }
+  }
+  if(!await writeFile()){ toast('ファイルに保存できませんでした'); return; }
+  toast(`${fileHandle.name} に保存しました`);
+  // 保存先を覚えておく（失敗しても今回の保存はできている）
+  try{ await idbSet('handle', fileHandle); }
+  catch(e){ fail('保存先を記憶できませんでした', e); }
 };
 if(window.showSaveFilePicker){
   $('fileBtn').hidden = false;
