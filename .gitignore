@@ -5,3 +5,6 @@ fun-sites-backup-*.json
 # 公開用スクリプトの作業ファイル
 tools/publish-cache.json
 tools/publish.log
+
+# サムネイル（他サイトの画面の画像。公開しないサイトの分も含むので上げない）
+thumbs/

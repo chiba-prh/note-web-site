@@ -14,6 +14,7 @@ import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
+import { stripTracking } from './url.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const RAW = process.env.PUBLISH_RAW || join(ROOT, 'bookmarks-raw.json');
@@ -27,20 +28,6 @@ function log(msg) {
   const line = `${new Date().toLocaleString('ja-JP')} ${msg}`;
   console.log(line);
   if (!DRY) appendFileSync(LOG, line + '\n');
-}
-
-/* ---------- 追跡パラメータ（決め打ち） ---------- */
-const TRACK = /^(utm_.+|yclid|gclid|gbraid|wbraid|dclid|fbclid|msclkid|twclid|ttclid|igshid|mc_cid|mc_eid|_hsenc|_hsmi|_ga|_gl|_ly_.+)$/i;
-// 「&amp;amp;utm_medium」のように壊れて貼られたキーも拾う
-const paramKey = k => k.replace(/^(amp;)+/i, '');
-
-function stripTracking(url) {
-  let u;
-  try { u = new URL(url); } catch { return url; }
-  const keep = [...u.searchParams].filter(([k]) => !TRACK.test(paramKey(k)));
-  if (keep.length === [...u.searchParams].length) return url;
-  u.search = keep.length ? '?' + new URLSearchParams(keep) : '';
-  return u.toString();
 }
 
 /* ---------- AIの答えの検査（削る方向の変更だけ受け付ける） ---------- */
@@ -174,3 +161,6 @@ function main() {
 
 try { main(); }
 catch (e) { log('エラー: ' + e.message); process.exitCode = 1; }
+
+// ついでにサムネイルも足りない分を作る（失敗しても公開の結果には影響させない）
+if (!DRY) spawnSync(process.execPath, [join(ROOT, 'tools', 'thumbs.mjs')], { stdio: 'inherit', windowsHide: true });
