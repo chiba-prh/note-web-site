@@ -1,6 +1,7 @@
 // 公開用データの作成とGitHubへの反映（毎日1回、タスクスケジューラから実行）
 //
-//   bookmarks-raw.json（ページが自動保存する元データ・非公開）
+//   Chrome の中の最新データ → bookmarks-raw.json に取り込む（tools/browser-data.mjs）
+//   bookmarks-raw.json（元データ・非公開）
 //     → 追跡パラメータを削る（決め打ち）
 //     → 新規・変更されたサイトだけ claude -p に見せて、識別子とメモを整える
 //     → bookmarks-data.json（公開用）に書き出し、変更があればコミット・プッシュ
@@ -15,6 +16,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { stripTracking } from './url.mjs';
+import { syncRawFromBrowser } from './browser-data.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const RAW = process.env.PUBLISH_RAW || join(ROOT, 'bookmarks-raw.json');
@@ -93,6 +95,11 @@ function git(...args) {
 
 /* ---------- 本体 ---------- */
 function main() {
+  // ページの自動保存が止まっていても拾えるように、Chrome の中の最新データを先に取り込む
+  if (!DRY && !process.env.PUBLISH_RAW) {
+    try { const r = syncRawFromBrowser(); if (r.changed) log(r.note); }
+    catch (e) { log('Chrome の中のデータを取り込めませんでした: ' + e.message); }
+  }
   if (!existsSync(RAW)) {
     log('元データ bookmarks-raw.json がありません。ページの「ファイルへ自動保存」を設定してください。');
     return;
